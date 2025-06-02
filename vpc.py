@@ -1,6 +1,8 @@
 import os
+import sys
 
 import boto3
+from botocore.exceptions import ClientError
 
 from utils.tagger import tagit
 
@@ -51,10 +53,9 @@ def create_vpc( client:boto3.client , vpc_cidr:str ):
 
         return vpc_id
     
-    except KeyError as e:
-        # Print the error for debugging
+    except ClientError as e:
         print(f"Error creating VPC: {str(e)}")
-        raise
+        sys.exit(1)
 
     
 
