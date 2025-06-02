@@ -1,3 +1,6 @@
 .env
 .venv
 learning
+
+__pycache__
+*.pyc
