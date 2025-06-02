@@ -51,6 +51,10 @@ def create_vpc( client:boto3.client , vpc_cidr:str ):
         vpc_id = create_vpc_response['Vpc']['VpcId']
         print(f"Created VPC: {vpc_id}")
 
+        waiter = client.get_waiter('vpc_available')
+        waiter.wait(VpcIds=[vpc_id])
+        print(f"VPC {vpc_id} is available")
+
         return vpc_id
     
     except ClientError as e:
