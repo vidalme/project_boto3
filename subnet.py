@@ -1,5 +1,6 @@
 import os
 import sys
+import random
 
 import boto3
 from botocore.exceptions import ClientError 
@@ -13,50 +14,60 @@ load_dotenv()
 project = os.getenv('PROJECT')
 env = os.getenv('ENV')
 
-subnets_name = "subnets_"+project+"_"+env
+subnet_base_name = "subnets_"+project+"_"+env
 
-# def list_available_zones():
+subnets_cidr = ['10.0.1.0/24','10.0.2.0/24','10.0.3.0/24','10.0.4.0/24'] 
 
 def create_subnets(client:boto3.client, vpc_id:str):
-    # , cidr_block:str, az:str
+    
+    subnets_describe_response = client.describe_subnets(
+        Filters=[
+            {
+                'Name': 'tag:project',
+                'Values': [
+                    project,
+                ]
+            },
+        ],
+    )
 
-    # subnets_list = client.describe_subnets(
-    #     Filters=[
-    #         {
-    #             'Name':'qqum',
-    #             'Value':[
-    #                 'string'
-    #             ]
-    #         }
-    #     ],
-    #     SubnetIds=['string']
-    # )
+    if len(subnets_describe_response['Subnets']):
+        for sn in subnets_describe_response['Subnets']:
+            print(sn['Tags']) 
 
-    print(list_available_zones_names(client))
+
 
     try:
-        create_subnet_response = client.create_subnet(
-            TagSpecifications=tagit([
-                {
-                    'ResourceType': 'subnet',
-                    'Tags': [
-                        {
-                            'Key': 'Name',
-                            'Value': subnets_name
-                        },
-                        {
-                            'Key': 'env',
-                            'Value': env
-                        },
-                    ]
-                },
-            ]),
-            VpcId=vpc_id,
-            # CidrBlock=cidr_block,
-            # AvailabilityZone=az,
-            # AvailabilityZoneId=az_id,
-        )
+        subnets_names=[]
+        az_list = list_available_zones_names(client)
 
-    except Exception as e:
+        for i in range(4):
+            subnet_name = f"{subnet_base_name}_{i}"
+            subnets_names.append(subnet_name)
+            create_subnet_response = client.create_subnet(
+                TagSpecifications=[
+                    {
+                        'ResourceType': 'subnet',
+                        'Tags': tagit(
+                            [
+                                {
+                                    'Key': 'Name',
+                                    'Value': subnet_name
+                                },
+                                {
+                                    'Key': 'env',
+                                    'Value': env
+                                },
+                            ]
+                        )
+                    },
+                ],
+                VpcId=vpc_id,
+                CidrBlock= subnets_cidr[i],
+                AvailabilityZone=az_list[i],
+            )
+            print(f"Created Subnet: {create_subnet_response['Subnet']['Tags'][-1]['Value']}")
+
+    except ClientError as e:
         print(f'Could not create Subnet: {e}')
     

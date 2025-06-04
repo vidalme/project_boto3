@@ -19,8 +19,4 @@ ec2_client = boto3.client('ec2')
 
 if __name__ == '__main__':
     vpc_id = create_vpc( ec2_client , vpc_cidr )
-
     create_subnets(ec2_client,vpc_id)
-
-
-
