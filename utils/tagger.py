@@ -1,14 +1,21 @@
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
+
+project = os.getenv('PROJECT')
+author = os.getenv('AUTHOR')
 #   util for helping managing resources tagging
 
 #  my common tags are here but should be somewhere else
 common_tags_list=[
     {
         'Key': 'project',
-        'Value': 'project_boto3'
+        'Value': project
     },
     {
         'Key': 'author',
-        'Value': 'vidalme'
+        'Value': author
     }
 ]
 
