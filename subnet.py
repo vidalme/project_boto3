@@ -31,16 +31,18 @@ def create_subnets(client:boto3.client, vpc_id:str):
         ],
     )
 
-    if len(subnets_describe_response['Subnets']):
+    if len(subnets_describe_response['Subnets'])!=0:
+        subnets_names = []
         for sn in subnets_describe_response['Subnets']:
-            print(sn['Tags']) 
-
-
+            for tag in sn['Tags']:
+                if tag['Key'] == 'Name': 
+                    subnets_names.append(tag['Value']) 
+        return subnets_names
 
     try:
         subnets_names=[]
         az_list = list_available_zones_names(client)
-
+        print('Creating subnets...')
         for i in range(4):
             subnet_name = f"{subnet_base_name}_{i}"
             subnets_names.append(subnet_name)
@@ -63,10 +65,12 @@ def create_subnets(client:boto3.client, vpc_id:str):
                     },
                 ],
                 VpcId=vpc_id,
-                CidrBlock= subnets_cidr[i],
+                CidrBlock=subnets_cidr[i],
                 AvailabilityZone=az_list[i],
             )
             print(f"Created Subnet: {create_subnet_response['Subnet']['Tags'][-1]['Value']}")
+        print(f'Subnets {subnets_names} are available')    
+        return subnets_names
 
     except ClientError as e:
         print(f'Could not create Subnet: {e}')
