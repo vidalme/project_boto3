@@ -36,7 +36,8 @@ def create_subnets(client:boto3.client, vpc_id:str):
         for sn in subnets_describe_response['Subnets']:
             for tag in sn['Tags']:
                 if tag['Key'] == 'Name': 
-                    subnets_names.append(tag['Value']) 
+                    subnets_names.append(tag['Value'])
+        print(f'Subnets already exist') 
         return subnets_names
 
     try:
@@ -68,8 +69,8 @@ def create_subnets(client:boto3.client, vpc_id:str):
                 CidrBlock=subnets_cidr[i],
                 AvailabilityZone=az_list[i],
             )
-            print(f"Created Subnet: {create_subnet_response['Subnet']['Tags'][-1]['Value']}")
-        print(f'Subnets {subnets_names} are available')    
+            print(f"Subnet created: {create_subnet_response['Subnet']['Tags'][-1]['Value']}")
+        print(f'Subnets are available')    
         return subnets_names
 
     except ClientError as e:

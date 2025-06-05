@@ -68,7 +68,8 @@ def destroy_all_non_default_vpcs(client:boto3.client):
     response = client.describe_vpcs()
     for vpc in response['Vpcs']:
         if vpc['IsDefault']:
-            print(f'Let us not delete {vpc['VpcId']}, the Default VPC please')
+            # Let us not delete the Default VPC please')
+            pass
         else:
             print(f'VPC {vpc['VpcId']} has been deleted successfully.')
             print("\n")
