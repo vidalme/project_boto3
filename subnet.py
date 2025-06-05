@@ -75,3 +75,21 @@ def create_subnets(client:boto3.client, vpc_id:str):
     except ClientError as e:
         print(f'Could not create Subnet: {e}')
     
+# Destroys all subnets with the project name Tag associated
+def destroy_all_subnets(client:boto3.client):
+
+    response = client.describe_subnets(
+        Filters=[
+            {
+                'Name': 'tag:project',
+                'Values': [
+                    project,
+                ]
+            },
+        ],
+    )
+    for i in response['Subnets']:
+        response = client.delete_subnet(
+            SubnetId=i['SubnetId'],
+        )
+        print(f"Subnet {i['SubnetId']} has been deleted successfully")

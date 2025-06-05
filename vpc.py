@@ -61,5 +61,15 @@ def create_vpc( client:boto3.client , vpc_cidr:str ):
         print(f"Error creating VPC: {str(e)}")
         sys.exit(1)
 
+# for testing I made this a VPC wipe out
+# loops all vpcs and deletes every non default vpc
+def destroy_all_non_default_vpcs(client:boto3.client): 
     
-
+    response = client.describe_vpcs()
+    for vpc in response['Vpcs']:
+        if vpc['IsDefault']:
+            print(f'Let us not delete {vpc['VpcId']}, the Default VPC please')
+        else:
+            print(f'VPC {vpc['VpcId']} has been deleted successfully.')
+            print("\n")
+            client.delete_vpc(VpcId=vpc['VpcId'])
