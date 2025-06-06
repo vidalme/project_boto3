@@ -2,6 +2,12 @@
 
 ### To-Dos
 
+#### June 7th
+- Create SecurityGroups module
+
+#### June 6th
+- Create RouteTables module
+
 #### June 5th
 - Create internet_gateway module
 
