@@ -25,3 +25,5 @@ if __name__ == '__main__':
     vpc_id:str = create_vpc(client, vpc_cidr)
     subnets_names:list = create_subnets(client, vpc_id)
     igw_id:str = create_internet_gateway(client, vpc_id)
+    subnets_ids:list = create_subnets(client, vpc_id)
+    set_route_tables(client, vpc_id, igw_id, subnets_ids)
