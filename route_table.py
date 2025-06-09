@@ -51,9 +51,10 @@ def create_public_route_table(client:boto3.client, vpc_id:str, igw_id:str, subne
         )
         rt_id = response['RouteTable']['RouteTableId']
         print(f'Created RouteTable {rt_id}')
-        response_route = client.create_route(DestinationCidrBlock='0.0.0.0/0',GatewayId=igw_id,RouteTableId=rt_id)
+        client.create_route(DestinationCidrBlock='0.0.0.0/0',GatewayId=igw_id,RouteTableId=rt_id)
         print(f'Created public route for RouteTable {rt_id}')
-        for i in range(0,len(subnets_ids)):
+        
+        for i in range(len(subnets_ids)):
             if i%2==0:
                 associate_route_table(client,rt_id,subnets_ids[i])
                 print(f'Associated public routetable {rt_id} with public subnet {subnets_ids[i]}')

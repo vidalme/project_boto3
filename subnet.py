@@ -45,7 +45,7 @@ def create_subnets(client:boto3.client, vpc_id:str):
         subnets_ids = []
         az_list = list_available_zones_names(client)
         print('Creating subnets...')
-        for i in range(0,4):
+        for i in range(4):
             subnet_name = f"{subnet_base_name}_{i}"
             subnets_names.append(subnet_name)
             create_subnet_response = client.create_subnet(
