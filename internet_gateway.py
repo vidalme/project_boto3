@@ -11,7 +11,7 @@ load_dotenv()
 project = os.getenv('PROJECT')
 env = os.getenv('ENV')
 
-igw_name = "igw_"+project+"_"+env
+igw_name = f'igw_{project}_{env}'
 
 filters = [{'Name': 'tag:project', 'Values': [project]}]
 

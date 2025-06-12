@@ -14,7 +14,7 @@ project = os.getenv('PROJECT')
 env = os.getenv('ENV')
 vpc_cidr = os.getenv('VPC_CIDR')
 
-route_table_base_name = "route_table_"+project+"_"+env
+route_table_base_name = f'route_table_{project}_{env}'
 
 def set_route_tables(client:boto3.client, vpc_id:str, igw_id:str, subnets_ids:list):
     

@@ -10,10 +10,10 @@ from dotenv import load_dotenv
 # Load environment variables from the .env file
 load_dotenv()
 
-project = os.getenv('PROJECT')
-env = os.getenv('ENV')
+project:str = os.getenv('PROJECT')
+env:str = os.getenv('ENV')
 
-vpc_name = "vpc_"+project+"_"+env
+vpc_name = f'vpc_{project}_{env}'
 
 def create_vpc( client:boto3.client , vpc_cidr:str ):
     # VPC creation and tagging

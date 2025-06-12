@@ -14,7 +14,7 @@ load_dotenv()
 project = os.getenv('PROJECT')
 env = os.getenv('ENV')
 
-subnet_base_name = "subnets_"+project+"_"+env
+subnet_base_name = f'subnets{project}_{env}'
 
 subnets_cidr = ['10.0.1.0/24','10.0.2.0/24','10.0.3.0/24','10.0.4.0/24'] 
 
