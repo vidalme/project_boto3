@@ -98,6 +98,9 @@ def create_sgs(client:boto3.client, vpc_id:str ):
         except ClientError as e:
             print(f'Could not create securitygroup {be_sg_name} {e}')
 
+    return fe_sec_id
+    
+
 def fe_authorize_sg_rules(client:boto3.client,ingress_rules:dict, fe_sec_id:str):
     print('Creating frontend security group rules...')
     try:
@@ -145,7 +148,7 @@ def be_authorize_sg_rules(client:boto3.client, vpc_id:str, ingress_rules:dict, b
                             },
                         ],
                     },
-                ]            
+                ]
         )
         print(f'Security group rule for backend created')
     except ClientError as e:
@@ -162,4 +165,3 @@ def destroy_all_sgs(client:boto3.client):
                 print(f'Could not delete security group {sg['GroupId']}')
     except ClientError as e:
         print(f'Could not delete securitygroup {e}')
-
