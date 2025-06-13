@@ -24,7 +24,7 @@ fe_ingress_rules = [
 ]
 
 be_ingress_rules = [
-    {'IpProtocol': 'tcp', 'FromPort': 3306, 'ToPort': 3306, 'SourceSecurityGroupId': 'dummy'} # MySQL port
+    {'IpProtocol': 'tcp', 'FromPort': 3306, 'ToPort': 3306} # MySQL port
     # {'IpProtocol': 'tcp', 'FromPort': 3306, 'ToPort': 3306, 'SourceSecurityGroupId': ec2_sg_id} # MySQL port
 ]
 
@@ -32,8 +32,8 @@ def describe_sg(client:boto3.client, sg_name:str):
     try:
         response = client.describe_security_groups(
             Filters=[
-                {'Name': 'tag:project', 'Values': [project,]},
-                {'Name': 'tag:Name', 'Values': [ sg_name,]},
+                {'Name': 'tag:project', 'Values': [project ]},
+                {'Name': 'tag:Name', 'Values': [ sg_name ]},
             ]
         )
         # print(response['SecurityGroups'])
@@ -41,43 +41,68 @@ def describe_sg(client:boto3.client, sg_name:str):
     except ClientError as e:
         print(f'Could not create securitygroup {sg_name} {e}')
 
-def create_sgs(client:boto3.client, vpc_id:str):
-    create_sg(client,vpc_id,fe_sg_name, 'fe') if not describe_sg(client,fe_sg_name) else print(f'SecurityGroup {fe_sg_name} already exist')
-    create_sg(client,vpc_id,be_sg_name, 'be') if not describe_sg(client,be_sg_name) else print(f'SecurityGroup {be_sg_name} already exist')
+def create_sgs(client:boto3.client, vpc_id:str ):
 
-def create_sg(client:boto3.client, vpc_id:str, sg_name:str, ms:str):
-    try:
-        print('Creating security group...')
-        response = client.create_security_group(
-            Description='Security Group for the frontend of the application',
-            GroupName=sg_name,
-            VpcId=vpc_id,
-            TagSpecifications=[
-                {
-                    'ResourceType': 'security-group',
-                    'Tags': tagit([ 
-                        {'Key': 'Name', 'Value': sg_name},
-                        {'Key': 'env', 'Value': env},
-                    ])
-                },
-            ],
-        )
-        print('Security group created')
+    fe_sec_id:str = ""
 
-        if ms.lower() == 'fe':
-            fe_rule_name = sg_name+'_rule'
-            fe_authorize_sg_rules(client,fe_rule_name,fe_ingress_rules,'fe')
-        if ms.lower() == 'be':
-            be_rule_name = sg_name+'_rule'
-            be_authorize_sg_rules(client,fe_rule_name,be_ingress_rules,'be')
+    if not describe_sg(client,fe_sg_name):
+        try:
+            print('Creating frontend security group...')
+            fe_response = client.create_security_group(
+                Description='Security Group for the frontend of the application',
+                GroupName=fe_sg_name,
+                VpcId=vpc_id,
+                TagSpecifications=[
+                    {
+                        'ResourceType': 'security-group',
+                        'Tags': tagit([ 
+                            {'Key': 'Name', 'Value': fe_sg_name},
+                            {'Key': 'env', 'Value': env},
+                        ])
+                    },
+                ],
+            )
+
+            fe_sec_id = fe_response['GroupId']
+            print(f'Security group created for frontend {fe_sec_id}')
+
+            for rule in fe_ingress_rules: fe_authorize_sg_rules(client,rule,fe_sec_id)
+             
+        except ClientError as e:
+            print(f'Could not create securitygroup {fe_sg_name} {e}')
+
+    if not describe_sg(client,be_sg_name):
+        try:                      
+            print('Creating backend security group...')
+            be_response = client.create_security_group(
+                Description='Security Group for the backend of the application',
+                GroupName=be_sg_name,
+                VpcId=vpc_id,
+                TagSpecifications=[
+                    {
+                        'ResourceType': 'security-group',
+                        'Tags': tagit([ 
+                            {'Key': 'Name', 'Value': be_sg_name},
+                            {'Key': 'env', 'Value': env},
+                        ])
+                    },
+                ],
+            )
             
-    except ClientError as e:
-        print(f'Could not create securitygroup {sg_name} {e}')
+            be_sec_id = be_response['GroupId']
+            print(f'Security group created for backend {be_sec_id}')            
 
-def fe_authorize_sg_rules(client:boto3.client,fe_rule_name:str,ingress_rules:dict):
+            for rule in be_ingress_rules:
+                be_authorize_sg_rules(client,vpc_id,rule,be_sec_id,fe_sec_id)
+
+        except ClientError as e:
+            print(f'Could not create securitygroup {be_sg_name} {e}')
+
+def fe_authorize_sg_rules(client:boto3.client,ingress_rules:dict, fe_sec_id:str):
     print('Creating frontend security group rules...')
     try:
         response = client.authorize_security_group_ingress(
+            GroupId=fe_sec_id,
             CidrIp=ingress_rules['CidrIp'],
             FromPort=ingress_rules['FromPort'],
             IpProtocol=ingress_rules['IpProtocol'],
@@ -86,7 +111,6 @@ def fe_authorize_sg_rules(client:boto3.client,fe_rule_name:str,ingress_rules:dic
                 {
                     'ResourceType': 'security-group-rule',
                     'Tags': tagit([ 
-                        {'Key': 'Name', 'Value': fe_rule_name},
                         {'Key': 'env', 'Value': env},
                     ])
                 },
@@ -96,43 +120,36 @@ def fe_authorize_sg_rules(client:boto3.client,fe_rule_name:str,ingress_rules:dic
     except ClientError as e:
         print(f'Could not create frontend security group rule {e}') 
 
-def be_authorize_sg_rules(client:boto3.client,be_rule_name:str,ingress_rules:dict):
+def be_authorize_sg_rules(client:boto3.client, vpc_id:str, ingress_rules:dict, be_sec_id:str,fe_sec_id:str):
     print('Creating backend security group rules...')
-    try:    
+    try:
         response = client.authorize_security_group_ingress(
-            SourceSecurityGroupName=ingress_rules['SourceSecurityGroupId'],
-            FromPort=ingress_rules['FromPort'],
-            IpProtocol=ingress_rules['IpProtocol'],
-            ToPort=ingress_rules['ToPort'],
+            GroupId=be_sec_id,
             TagSpecifications=[
                 {
                     'ResourceType': 'security-group-rule',
                     'Tags': tagit([ 
-                        {'Key': 'Name', 'Value': be_rule_name},
                         {'Key': 'env', 'Value': env},
                     ])
                 },
             ],
+            IpPermissions=[
+                    {
+                        'FromPort': ingress_rules['FromPort'],
+                        'IpProtocol': ingress_rules['IpProtocol'],
+                        'ToPort': ingress_rules['ToPort'],
+                        'UserIdGroupPairs': [
+                            {
+                                'Description': 'HTTP access from other instances',
+                                'GroupId': fe_sec_id,
+                            },
+                        ],
+                    },
+                ]            
         )
         print(f'Security group rule for backend created')
     except ClientError as e:
         print(f'Could not create backend security group rule {e}') 
-
-def authorize_fe_sg_egress(client:boto3.client):
-    pass
-
-def authorize_be_sg_ingress(client:boto3.client):
-    pass
-
-def authorize_be_sg_egress(client:boto3.client):
-    pass
-
-
-
-
-
-
-
 
 def destroy_all_sgs(client:boto3.client):
     try:
@@ -140,6 +157,7 @@ def destroy_all_sgs(client:boto3.client):
         for sg in response['SecurityGroups']: 
             try:
                 client.delete_security_group(GroupId=sg['GroupId'])
+                print(f"Security group {sg['GroupId']} has been deleted successfully")
             except ClientError as e:
                 print(f'Could not delete security group {sg['GroupId']}')
     except ClientError as e:
