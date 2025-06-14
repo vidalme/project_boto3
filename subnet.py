@@ -78,16 +78,14 @@ def destroy_all_subnets(client:boto3.client):
 
     response = client.describe_subnets(
         Filters=[
-            {
-                'Name': 'tag:project',
-                'Values': [
-                    project,
-                ]
-            },
+            {'Name': 'tag:project','Values': [project,]},
         ],
     )
-    for i in response['Subnets']:
-        response = client.delete_subnet(
-            SubnetId=i['SubnetId'],
-        )
-        print(f"Subnet {i['SubnetId']} has been deleted successfully")
+    if response['Subnets']:
+        for i in response['Subnets']:
+            response = client.delete_subnet(
+                SubnetId=i['SubnetId'],
+            )
+            print(f"Subnet {i['SubnetId']} has been deleted successfully")
+    else:
+        print(f'There are no Subnets to destroy')
