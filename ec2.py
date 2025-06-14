@@ -137,7 +137,7 @@ def destroy_ec2 (client:boto3.client):
     instances = describe_ec2(client)
 
     if len(instances) > 0:
-        print(f'Terminating all EC   instances')
+        print(f'Terminating all EC2 instances')
         instances_ids=[]
         for instance in instances: instances_ids.append(instance['InstanceId'])
         
