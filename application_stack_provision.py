@@ -7,7 +7,7 @@ from internet_gateway import create_internet_gateway
 from subnet import create_subnets
 from route_table import set_route_tables
 from security_group import create_sgs
-from ec2 import create_ec2
+from ec2 import create_all_ec2
 
 from dotenv import load_dotenv
 # Load environment variables from the .env file
@@ -29,5 +29,5 @@ if __name__ == '__main__':
     igw_id:str = create_internet_gateway(client, vpc_id)
     subnets_ids:list = create_subnets(client, vpc_id)
     set_route_tables(client, vpc_id, igw_id, subnets_ids)
-    fe_sg_id = create_sgs(client,vpc_id)
-    create_ec2(client,vpc_id,subnets_ids[0], fe_sg_id)
+    fe_sg_id:str = create_sgs(client,vpc_id)
+    create_all_ec2(client)
