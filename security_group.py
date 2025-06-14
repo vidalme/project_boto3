@@ -39,7 +39,7 @@ def describe_sg(client:boto3.client, sg_name:str):
         # print(response['SecurityGroups'])
         return response['SecurityGroups']
     except ClientError as e:
-        print(f'Could not create securitygroup {sg_name} {e}')
+        print(f'Could not describe securitygroup {sg_name} {e}')
 
 def create_sgs(client:boto3.client, vpc_id:str ):
 
@@ -58,6 +58,7 @@ def create_sgs(client:boto3.client, vpc_id:str ):
                         'Tags': tagit([ 
                             {'Key': 'Name', 'Value': fe_sg_name},
                             {'Key': 'env', 'Value': env},
+                            {'Key': 'level', 'Value': 'frontend'},
                         ])
                     },
                 ],
@@ -84,6 +85,7 @@ def create_sgs(client:boto3.client, vpc_id:str ):
                         'Tags': tagit([ 
                             {'Key': 'Name', 'Value': be_sg_name},
                             {'Key': 'env', 'Value': env},
+                            {'Key': 'level', 'Value': 'backend'},
                         ])
                     },
                 ],
